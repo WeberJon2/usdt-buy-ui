@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buy USDT</title>
+</head>
+<body>
+  <h2>Send USDT to Contract</h2>
+  <p>Make sure you're on <strong>BSC Mainnet</strong></p>
+  <input id="amount" type="number" placeholder="Amount in USDT (e.g. 1)" />
+  <br/><br/>
+  <button onclick="approve()">Approve</button>
+  <button onclick="buy()">BUY</button>
+
+  <p id="status"></p>
+
+  <script>
+    const usdtAddress = "0x0269D198F6e2393830d7e52146c14E885e3c458D"; // USDT BSC
+    const contractAddress = "0x64F7...5dbe"; // <-- замените на адрес вашего контракта
+    const contractABI = [
+      "function BUY(uint256 amount) external",
+      "function SetWalletReceipe(address _receipe) external"
+    ];
+    const erc20ABI = [
+      "function approve(address spender, uint256 amount) external returns (bool)"
+    ];
+
+    let provider, signer, contract, usdt;
+
+    async function connect() {
+      if (window.ethereum) {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        usdt = new ethers.Contract(usdtAddress, erc20ABI, signer);
+      } else {
+        alert("Please install MetaMask!");
+      }
+    }
+
+    async function approve() {
+      await connect();
+      const amount = parseFloat(document.getElementById("amount").value) * 1e6;
+      try {
+        const tx = await usdt.approve(contractAddress, amount);
+        document.getElementById("status").innerText = "Waiting for approval...";
+        await tx.wait();
+        document.getElementById("status").innerText = "Approved!";
+      } catch (e) {
+        document.getElementById("status").innerText = "Error during approval.";
+      }
+    }
+
+    async function buy() {
+      await connect();
+      const amount = parseFloat(document.getElementById("amount").value) * 1e6;
+      try {
+        const tx = await contract.BUY(amount);
+        document.getElementById("status").innerText = "Processing BUY...";
+        await tx.wait();
+        document.getElementById("status").innerText = "USDT sent successfully!";
+      } catch (e) {
+        document.getElementById("status").innerText = "Error during BUY.";
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+</body>
+</html>
