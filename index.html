@@ -46,17 +46,22 @@
 
     async function connectWallet() {
       try {
-        const walletConnectProvider = new window.WalletConnectProvider.default({
-          rpc: {
-            56: "https://bsc-dataseed.binance.org/"
-          },
-          chainId: 56
-        });
+        if (typeof window.ethereum !== 'undefined') {
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = provider.getSigner();
+        } else {
+          const walletConnectProvider = new window.WalletConnectProvider.default({
+            rpc: {
+              56: "https://bsc-dataseed.binance.org/"
+            },
+            chainId: 56
+          });
+          await walletConnectProvider.enable();
+          provider = new ethers.providers.Web3Provider(walletConnectProvider);
+          signer = provider.getSigner();
+        }
 
-        await walletConnectProvider.enable();
-
-        provider = new ethers.providers.Web3Provider(walletConnectProvider);
-        signer = provider.getSigner();
         contract = new ethers.Contract(contractAddress, contractABI, signer);
         usdt = new ethers.Contract(usdtAddress, erc20ABI, signer);
 
