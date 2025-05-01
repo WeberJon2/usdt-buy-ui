@@ -4,22 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Buy USDT</title>
+  <style>
+    button {
+      margin: 4px;
+      padding: 8px 12px;
+      font-size: 16px;
+    }
+    #connectBtn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+  </style>
 </head>
 <body>
   <h2>Send USDT to Contract</h2>
   <p>Make sure you're on <strong>BSC Mainnet</strong></p>
   <input id="amount" type="number" placeholder="Amount in USDT (e.g. 1)" />
   <br/><br/>
-  <button onclick="connectWallet()">Connect Wallet</button>
+  <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
   <button onclick="approve()">Approve</button>
   <button onclick="buy()">BUY</button>
 
   <p id="status"></p>
+  <p id="walletInfo"></p>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script>
     const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BSC
-    const contractAddress = "0x0269D198F6e2393830d7e52146c14E885e3c458D"; // <-- замените на адрес вашего контракта
+    const contractAddress = "0x0269D198F6e2393830d7e52146c14E885e3c458D"; // <-- ваш контракт
     const contractABI = [
       "function BUY(uint256 amount) external",
       "function SetWalletReceipe(address _receipe) external"
@@ -38,10 +51,16 @@
           signer = provider.getSigner();
           contract = new ethers.Contract(contractAddress, contractABI, signer);
           usdt = new ethers.Contract(usdtAddress, erc20ABI, signer);
+
+          const address = await signer.getAddress();
+          const network = await provider.getNetwork();
+
           document.getElementById("status").innerText = "Wallet connected!";
+          document.getElementById("walletInfo").innerText = `Address: ${address}\nChain ID: ${network.chainId}`;
         } catch (err) {
-          console.error(err);
+          console.error("Connection error:", err);
           document.getElementById("status").innerText = "Wallet connection failed.";
+          document.getElementById("walletInfo").innerText = err.message || err;
         }
       } else {
         alert("Please install MetaMask!");
