@@ -93,7 +93,7 @@
 
     async function buy() {
       if (!signer) return alert("Please connect wallet first.");
-      const amount = parseFloat(document.getElementById("amount").value) * 1e6;
+      const amount = ethers.utils.parseUnits(document.getElementById("amount").value, 6);
       try {
         const tx = await contract.BUY(amount);
         document.getElementById("status").innerText = "Processing BUY...";
