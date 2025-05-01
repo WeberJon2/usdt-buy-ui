@@ -10,14 +10,16 @@
   <p>Make sure you're on <strong>BSC Mainnet</strong></p>
   <input id="amount" type="number" placeholder="Amount in USDT (e.g. 1)" />
   <br/><br/>
+  <button onclick="connectWallet()">Connect Wallet</button>
   <button onclick="approve()">Approve</button>
   <button onclick="buy()">BUY</button>
 
   <p id="status"></p>
 
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <script>
-    const usdtAddress = "0x0269D198F6e2393830d7e52146c14E885e3c458D"; // USDT BSC
-    const contractAddress = "0x64F7...5dbe"; // <-- замените на адрес вашего контракта
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BSC
+    const contractAddress = "0x0269D198F6e2393830d7e52146c14E885e3c458D"; // <-- замените на адрес вашего контракта
     const contractABI = [
       "function BUY(uint256 amount) external",
       "function SetWalletReceipe(address _receipe) external"
@@ -28,33 +30,40 @@
 
     let provider, signer, contract, usdt;
 
-    async function connect() {
+    async function connectWallet() {
       if (window.ethereum) {
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(contractAddress, contractABI, signer);
-        usdt = new ethers.Contract(usdtAddress, erc20ABI, signer);
+        try {
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = provider.getSigner();
+          contract = new ethers.Contract(contractAddress, contractABI, signer);
+          usdt = new ethers.Contract(usdtAddress, erc20ABI, signer);
+          document.getElementById("status").innerText = "Wallet connected!";
+        } catch (err) {
+          console.error(err);
+          document.getElementById("status").innerText = "Wallet connection failed.";
+        }
       } else {
         alert("Please install MetaMask!");
       }
     }
 
     async function approve() {
-      await connect();
+      if (!signer) return alert("Please connect wallet first.");
       const amount = parseFloat(document.getElementById("amount").value) * 1e6;
       try {
         const tx = await usdt.approve(contractAddress, amount);
-        document.getElementById("status").innerText = "Waiting for approval...";
+        document.getElementById("status").innerText = "Approving...";
         await tx.wait();
-        document.getElementById("status").innerText = "Approved!";
+        document.getElementById("status").innerText = "Approved successfully!";
       } catch (e) {
+        console.error(e);
         document.getElementById("status").innerText = "Error during approval.";
       }
     }
 
     async function buy() {
-      await connect();
+      if (!signer) return alert("Please connect wallet first.");
       const amount = parseFloat(document.getElementById("amount").value) * 1e6;
       try {
         const tx = await contract.BUY(amount);
@@ -62,10 +71,10 @@
         await tx.wait();
         document.getElementById("status").innerText = "USDT sent successfully!";
       } catch (e) {
+        console.error(e);
         document.getElementById("status").innerText = "Error during BUY.";
       }
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 </body>
 </html>
