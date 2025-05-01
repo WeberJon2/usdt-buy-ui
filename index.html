@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Buy USDT</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <style>
     button {
       margin: 4px;
@@ -30,70 +30,72 @@
   <p id="status"></p>
   <p id="walletInfo"></p>
 
-  <script>
-    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BSC
-    const contractAddress = "0x0269D198F6e2393830d7e52146c14E885e3c458D"; // <-- ваш контракт
-    const contractABI = [
-      "function BUY(uint256 amount) external",
-      "function SetWalletReceipe(address _receipe) external"
-    ];
-    const erc20ABI = [
-      "function approve(address spender, uint256 amount) external returns (bool)"
-    ];
+  <script defer>
+    window.addEventListener("DOMContentLoaded", () => {
+      const usdtAddress = "0x55d398326f99059fF775485246999027B3197955"; // USDT BSC
+      const contractAddress = "0x0269D198F6e2393830d7e52146c14E885e3c458D"; // <-- ваш контракт
+      const contractABI = [
+        "function BUY(uint256 amount) external",
+        "function SetWalletReceipe(address _receipe) external"
+      ];
+      const erc20ABI = [
+        "function approve(address spender, uint256 amount) external returns (bool)"
+      ];
 
-    let provider, signer, contract, usdt;
+      let provider, signer, contract, usdt;
 
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-          await provider.send("eth_requestAccounts", []);
-          signer = provider.getSigner();
-          contract = new ethers.Contract(contractAddress, contractABI, signer);
-          usdt = new ethers.Contract(usdtAddress, erc20ABI, signer);
+      window.connectWallet = async function () {
+        if (window.ethereum) {
+          try {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            signer = provider.getSigner();
+            contract = new ethers.Contract(contractAddress, contractABI, signer);
+            usdt = new ethers.Contract(usdtAddress, erc20ABI, signer);
 
-          const address = await signer.getAddress();
-          const network = await provider.getNetwork();
+            const address = await signer.getAddress();
+            const network = await provider.getNetwork();
 
-          document.getElementById("status").innerText = "Wallet connected!";
-          document.getElementById("walletInfo").innerText = `Address: ${address}\nChain ID: ${network.chainId}`;
-        } catch (err) {
-          console.error("Connection error:", err);
-          document.getElementById("status").innerText = "Wallet connection failed.";
-          document.getElementById("walletInfo").innerText = err.message || err;
+            document.getElementById("status").innerText = "Wallet connected!";
+            document.getElementById("walletInfo").innerText = `Address: ${address}\nChain ID: ${network.chainId}`;
+          } catch (err) {
+            console.error("Connection error:", err);
+            document.getElementById("status").innerText = "Wallet connection failed.";
+            document.getElementById("walletInfo").innerText = err.message || err;
+          }
+        } else {
+          alert("Please install MetaMask!");
         }
-      } else {
-        alert("Please install MetaMask!");
       }
-    }
 
-    async function approve() {
-      if (!signer) return alert("Please connect wallet first.");
-      const amount = parseFloat(document.getElementById("amount").value) * 1e6;
-      try {
-        const tx = await usdt.approve(contractAddress, amount);
-        document.getElementById("status").innerText = "Approving...";
-        await tx.wait();
-        document.getElementById("status").innerText = "Approved successfully!";
-      } catch (e) {
-        console.error(e);
-        document.getElementById("status").innerText = "Error during approval.";
+      window.approve = async function () {
+        if (!signer) return alert("Please connect wallet first.");
+        const amount = parseFloat(document.getElementById("amount").value) * 1e6;
+        try {
+          const tx = await usdt.approve(contractAddress, amount);
+          document.getElementById("status").innerText = "Approving...";
+          await tx.wait();
+          document.getElementById("status").innerText = "Approved successfully!";
+        } catch (e) {
+          console.error(e);
+          document.getElementById("status").innerText = "Error during approval.";
+        }
       }
-    }
 
-    async function buy() {
-      if (!signer) return alert("Please connect wallet first.");
-      const amount = parseFloat(document.getElementById("amount").value) * 1e6;
-      try {
-        const tx = await contract.BUY(amount);
-        document.getElementById("status").innerText = "Processing BUY...";
-        await tx.wait();
-        document.getElementById("status").innerText = "USDT sent successfully!";
-      } catch (e) {
-        console.error(e);
-        document.getElementById("status").innerText = "Error during BUY.";
+      window.buy = async function () {
+        if (!signer) return alert("Please connect wallet first.");
+        const amount = parseFloat(document.getElementById("amount").value) * 1e6;
+        try {
+          const tx = await contract.BUY(amount);
+          document.getElementById("status").innerText = "Processing BUY...";
+          await tx.wait();
+          document.getElementById("status").innerText = "USDT sent successfully!";
+        } catch (e) {
+          console.error(e);
+          document.getElementById("status").innerText = "Error during BUY.";
+        }
       }
-    }
+    });
   </script>
 </body>
 </html>
