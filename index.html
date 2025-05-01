@@ -79,7 +79,7 @@
 
     async function approve() {
       if (!signer) return alert("Please connect wallet first.");
-      const amount = parseFloat(document.getElementById("amount").value) * 1e6;
+      const amount = ethers.utils.parseUnits(document.getElementById("amount").value, 6);
       try {
         const tx = await usdt.approve(contractAddress, amount);
         document.getElementById("status").innerText = "Approving...";
